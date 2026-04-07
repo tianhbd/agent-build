@@ -1,0 +1,282 @@
+openapi: 3.1.0
+info:
+  title: Agent Build Task API
+  version: 0.1.0
+  description: API contract template for task-driven AI agent orchestration.
+servers:
+  - url: https://api.example.com
+    description: Replace with project runtime endpoint.
+tags:
+  - name: Health
+  - name: Tasks
+  - name: Reviews
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health status
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, timestamp]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  timestamp:
+                    type: string
+                    format: date-time
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: List tasks
+      operationId: listTasks
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+      responses:
+        '200':
+          description: Task list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+    post:
+      tags: [Tasks]
+      summary: Create a task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /tasks/{taskId}:
+    patch:
+      tags: [Tasks]
+      summary: Update a task status or fields
+      operationId: updateTask
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+  /tasks/{taskId}/dispatch:
+    post:
+      tags: [Tasks]
+      summary: Assign task to a subagent role
+      operationId: dispatchTask
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispatchRequest'
+      responses:
+        '200':
+          description: Dispatch recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /reviews:
+    post:
+      tags: [Reviews]
+      summary: Submit reviewer decision for a task
+      operationId: submitReview
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '200':
+          description: Review result recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResult'
+components:
+  schemas:
+    TaskStatus:
+      type: string
+      enum:
+        - proposed
+        - planned
+        - in_progress
+        - blocked
+        - in_review
+        - done
+        - rejected
+    AgentRole:
+      type: string
+      enum:
+        - main-agent
+        - planner
+        - architect
+        - coder
+        - debugger
+        - reviewer
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - ownerAgent
+        - acceptanceCriteria
+      properties:
+        id:
+          type: string
+          pattern: '^TASK-[0-9]{4}$'
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        ownerAgent:
+          $ref: '#/components/schemas/AgentRole'
+        priority:
+          type: string
+          enum: [P0, P1, P2, P3]
+        dependencies:
+          type: array
+          items:
+            type: string
+        input:
+          type: object
+          additionalProperties: true
+        output:
+          type: object
+          additionalProperties: true
+        acceptanceCriteria:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateTaskRequest:
+      type: object
+      required: [id, title, ownerAgent, acceptanceCriteria]
+      properties:
+        id:
+          type: string
+          pattern: '^TASK-[0-9]{4}$'
+        title:
+          type: string
+        ownerAgent:
+          $ref: '#/components/schemas/AgentRole'
+        priority:
+          type: string
+          enum: [P0, P1, P2, P3]
+        input:
+          type: object
+          additionalProperties: true
+        acceptanceCriteria:
+          type: array
+          items:
+            type: string
+    UpdateTaskRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        ownerAgent:
+          $ref: '#/components/schemas/AgentRole'
+        output:
+          type: object
+          additionalProperties: true
+        acceptanceCriteria:
+          type: array
+          items:
+            type: string
+    DispatchRequest:
+      type: object
+      required: [agentRole]
+      properties:
+        agentRole:
+          $ref: '#/components/schemas/AgentRole'
+        notes:
+          type: string
+    ReviewRequest:
+      type: object
+      required: [taskId, decision, criteriaEvidence]
+      properties:
+        taskId:
+          type: string
+          pattern: '^TASK-[0-9]{4}$'
+        decision:
+          type: string
+          enum: [accept, reject]
+        criteriaEvidence:
+          type: array
+          items:
+            type: object
+            required: [criterion, evidence, pass]
+            properties:
+              criterion:
+                type: string
+              evidence:
+                type: string
+              pass:
+                type: boolean
+        comments:
+          type: string
+    ReviewResult:
+      type: object
+      required: [taskId, decision, reviewedAt]
+      properties:
+        taskId:
+          type: string
+        decision:
+          type: string
+          enum: [accept, reject]
+        reviewedAt:
+          type: string
+          format: date-time
+        requiredRework:
+          type: array
+          items:
+            type: string
