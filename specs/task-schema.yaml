@@ -1,0 +1,46 @@
+﻿$schema: https://json-schema.org/draft/2020-12/schema
+title: Task Schema v0.12
+type: object
+required:
+  - task_id
+  - title
+  - status
+  - owner_agent
+  - node_type
+  - acceptance_criteria
+properties:
+  task_id:
+    type: string
+    pattern: ^TASK-[0-9]{4}$
+  title:
+    type: string
+  status:
+    type: string
+    enum: [proposed, planned, in_progress, blocked, in_review, done, rejected]
+  owner_agent:
+    type: string
+    enum: [main-agent, planner, architect, coder, debugger, reviewer]
+  node_id:
+    type: string
+  node_type:
+    type: string
+    enum: [simple, composite, N/A]
+  outer_orchestrator:
+    type: string
+    enum: [n8n, N/A]
+  internal_stage_plan:
+    type: array
+    items:
+      $ref: ./node-stage-schema.yaml
+  dual_quality_gates:
+    type: object
+    properties:
+      flow_gate:
+        type: object
+      content_gate:
+        type: object
+  acceptance_criteria:
+    type: array
+    items:
+      type: string
+additionalProperties: true

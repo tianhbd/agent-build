@@ -1,41 +1,16 @@
-# Release Workflow
+﻿# release-flow.md (v0.12)
 
-## Purpose
+## 发布前检查
 
-Provide a controlled release path for task-driven agent projects.
+1. 发布范围任务均 done。
+2. 双层质量控制证据齐全。
+3. composite 节点阶段证据齐全。
+4. 长期 memory 写回合规。
 
-## Release Preconditions
+## 发布步骤
 
-1. Release-scope tasks are all `done`.
-2. Every `done` task has reviewer acceptance evidence.
-3. Decision and architecture records are up to date.
-4. Changelog entry is prepared.
-
-## Steps
-
-1. Scope Freeze
-   - Main agent defines release task set.
-   - No new scope added without explicit release decision.
-
-2. Validation
-   - Verify acceptance checklist in `specs/acceptance.md`.
-   - Run required tests/checks.
-
-3. Review Gate
-   - Reviewer confirms release readiness.
-   - Any failed criterion blocks release.
-
-4. Documentation Sync
-   - Update `docs/changelog.md`.
-   - Ensure specs and architecture docs match shipped behavior.
-
-5. Release Mark
-   - Tag or mark release version.
-   - Record release decision in `docs/decisions.md` if policy-impacting.
-
-## Rollback Rules
-
-1. Define rollback trigger conditions before release mark.
-2. Keep previous stable version reference.
-3. If critical issue occurs, create immediate bugfix task and move to bugfix workflow.
-
+1. 冻结范围。
+2. 执行验收检查。
+3. reviewer 发布级审查。
+4. 更新 changelog。
+5. 打版本标签。

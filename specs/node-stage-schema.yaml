@@ -1,0 +1,39 @@
+﻿$schema: https://json-schema.org/draft/2020-12/schema
+title: Node Stage Schema v0.12
+type: object
+required:
+  - stage_id
+  - stage_goal
+  - stage_input
+  - stage_output
+  - validation_rules
+  - retry_policy
+  - fallback_action
+  - next_stage_condition
+properties:
+  stage_id:
+    type: string
+  stage_goal:
+    type: string
+  stage_input:
+    type: object
+  stage_output:
+    type: object
+  validation_rules:
+    type: array
+    items:
+      type: string
+  retry_policy:
+    type: object
+    required: [max_retry, retry_backoff]
+    properties:
+      max_retry:
+        type: integer
+        minimum: 0
+      retry_backoff:
+        type: string
+  fallback_action:
+    type: string
+  next_stage_condition:
+    type: string
+additionalProperties: false

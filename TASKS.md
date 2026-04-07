@@ -1,61 +1,72 @@
-# TASKS.md
+﻿# TASKS.md (v0.12)
 
-Single source of truth for all task execution.
+所有行为必须先登记任务。`TASKS.md` 是唯一任务账本。
 
-## Task Policy
+## 1. 状态机
 
-1. No execution without an active task entry.
-2. Status must follow valid transitions.
-3. Scope, inputs, outputs, and acceptance are mandatory.
-4. Reviewer approval is required to move to `done`.
+- `proposed`
+- `planned`
+- `in_progress`
+- `blocked`
+- `in_review`
+- `done`
+- `rejected`
 
-## Status Model
-
-- `proposed`: task captured, not yet planned.
-- `planned`: scope approved and ready for execution.
-- `in_progress`: actively being worked on.
-- `blocked`: cannot proceed due to dependency/risk.
-- `in_review`: implementation complete and pending reviewer.
-- `done`: accepted by reviewer.
-- `rejected`: reviewer rejected; requires rework or closure.
-
-## Standard Task Template
+## 2. 标准任务模板
 
 ```markdown
 ### TASK-####
-- Title: <short task name>
+- Title:
 - Status: proposed | planned | in_progress | blocked | in_review | done | rejected
-- Owner Agent: main-agent | planner | architect | coder | debugger | reviewer
 - Priority: P0 | P1 | P2 | P3
+- Owner Agent: main-agent | planner | architect | coder | debugger | reviewer
+- Node ID: NODE-<domain>-<name> | N/A
+- Node Type: simple | composite | N/A
+- Outer Orchestrator: n8n | N/A
 - Created: YYYY-MM-DD
 - Updated: YYYY-MM-DD
 - Dependencies: TASK-#### | none
 
 #### Input
 - Business Goal:
-- Context Files:
+- Upstream Data:
 - Constraints:
-- Assumptions:
+
+#### Internal Stage Plan (composite required)
+- stage_id:
+  - stage_goal:
+  - stage_input:
+  - stage_output:
+  - validation_rules:
+  - retry_policy:
+  - fallback_action:
+  - next_stage_condition:
 
 #### Output
 - Deliverables:
 - Changed Files:
 - Artifacts:
 
-#### Scope
-- In Scope:
-  - ...
-- Out of Scope:
-  - ...
+#### Dual Quality Gates
+- n8n Flow Gate:
+  - [ ] JSON structure valid
+  - [ ] required fields complete
+  - [ ] executable path valid
+- Node Content Gate:
+  - [ ] logic correctness
+  - [ ] structure coherence
+  - [ ] rhythm/consistency
+  - [ ] stage transition decision valid
 
 #### Acceptance Criteria
-- [ ] Functional criteria 1
-- [ ] Functional criteria 2
-- [ ] Tests or checks pass
-- [ ] Reviewer approves
+- [ ] Task-first流程遵守
+- [ ] 节点类型判定可追溯
+- [ ] subagent边界未违反
+- [ ] memory写回符合分层规则
+- [ ] reviewer evidence complete
 
 #### Execution Log
-- YYYY-MM-DD: <status update and notes>
+- YYYY-MM-DD:
 
 #### Review Result
 - Reviewer:
@@ -64,91 +75,63 @@ Single source of truth for all task execution.
 - Comments:
 ```
 
-## Example Tasks
+## 3. 示例任务
 
-### TASK-0001
-- Title: Bootstrap agent-build template repository
+### TASK-0120
+- Title: 升级模板到 v0.12（三层架构 + 双层质量控制）
 - Status: done
-- Owner Agent: reviewer
 - Priority: P0
+- Owner Agent: reviewer
+- Node ID: N/A
+- Node Type: N/A
+- Outer Orchestrator: n8n
 - Created: 2026-04-07
 - Updated: 2026-04-07
 - Dependencies: none
 
 #### Input
-- Business Goal: Provide reusable starter template for AI agent projects.
-- Context Files: README.md, CLAUDE.md, MEMORY.md, TASKS.md, prompts/, agents/, skills/, docs/, specs/, workflows/.
-- Constraints: Task-first model, single main controller, mandatory review gate.
-- Assumptions: Initial template does not include runtime application code.
+- Business Goal: 将模板固化为 n8n + 复合节点 agent 工程母版。
+- Upstream Data: v0.11 仓库基线。
+- Constraints: 规则必须文件化，不可隐藏在 prompt。
+
+#### Internal Stage Plan (composite required)
+- stage_id: N/A
+  - stage_goal: N/A
+  - stage_input: N/A
+  - stage_output: N/A
+  - validation_rules: N/A
+  - retry_policy: N/A
+  - fallback_action: N/A
+  - next_stage_condition: N/A
 
 #### Output
-- Deliverables: Complete folder structure and initial governance documents.
-- Changed Files: All template files.
-- Artifacts: None.
+- Deliverables: v0.12 文档、schema、流程、脚本与约束更新。
+- Changed Files: root/docs/prompts/agents/skills/specs/workflows/scripts。
+- Artifacts: v0.12 baseline.
 
-#### Scope
-- In Scope:
-  - Create all required directories and files.
-  - Define prompts, roles, workflows, and specs.
-- Out of Scope:
-  - Deployable runtime service.
-  - Environment-specific CI scripts.
+#### Dual Quality Gates
+- n8n Flow Gate:
+  - [x] JSON契约与流程校验规范齐全
+  - [x] 字段与阶段映射清晰
+  - [x] 可执行路径明确
+- Node Content Gate:
+  - [x] 节点阶段协议完整
+  - [x] subagent边界明确
+  - [x] memory分层与升格规则完整
+  - [x] reviewer门禁完整
 
 #### Acceptance Criteria
-- [x] Required directory structure exists.
-- [x] Every required file has complete usable content.
-- [x] Rules enforce all behavior through `TASKS.md`.
-- [x] Reviewer role and acceptance gate are defined.
+- [x] 三层架构落地
+- [x] 双层质量控制落地
+- [x] 复合节点判定规则落地
+- [x] 阶段协议含 retry_policy
+- [x] 工程补强文件齐全
 
 #### Execution Log
-- 2026-04-07: Task planned and executed to create baseline template.
-- 2026-04-07: Reviewer validated structure and content completeness.
+- 2026-04-07: 完成 v0.12 全量升级。
 
 #### Review Result
 - Reviewer: reviewer
 - Decision: accept
-- Evidence: File inventory and policy checks completed.
-- Comments: Baseline template ready for reuse.
-
-### TASK-0002
-- Title: Add health-check API spec and acceptance checks
-- Status: planned
-- Owner Agent: architect
-- Priority: P2
-- Created: 2026-04-07
-- Updated: 2026-04-07
-- Dependencies: TASK-0001
-
-#### Input
-- Business Goal: Define minimum API contract to verify agent project health.
-- Context Files: specs/api.yaml, specs/acceptance.md, docs/architecture.md.
-- Constraints: Backward compatible with existing task schema.
-- Assumptions: Service implementation will be added in downstream projects.
-
-#### Output
-- Deliverables: Extended API specification and acceptance checklist updates.
-- Changed Files: specs/api.yaml, specs/acceptance.md.
-- Artifacts: API contract diff.
-
-#### Scope
-- In Scope:
-  - Document `/health` response contract.
-  - Specify validation expectations for health endpoint.
-- Out of Scope:
-  - Implementing runtime endpoint.
-  - Infrastructure monitoring setup.
-
-#### Acceptance Criteria
-- [ ] `specs/api.yaml` includes explicit `/health` contract.
-- [ ] `specs/acceptance.md` includes health endpoint checks.
-- [ ] Reviewer confirms consistency with architecture docs.
-
-#### Execution Log
-- 2026-04-07: Task created from roadmap backlog.
-
-#### Review Result
-- Reviewer: N/A
-- Decision: N/A
-- Evidence: N/A
-- Comments: Awaiting implementation.
-
+- Evidence: 全量文件审查通过。
+- Comments: 可直接落库。

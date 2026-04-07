@@ -1,47 +1,39 @@
-# Skill: requirement
+﻿# Skill: requirement (v0.12)
 
-## Skill Name
-
-Requirement Structuring Skill
-
-## When to Use
-
-Use this skill when:
-
-1. A new user request needs precise scope definition.
-2. Requirements are ambiguous or mixed with implementation ideas.
-3. The team needs clear acceptance criteria before planning.
-
-## Input Specification
+## 输入
 
 ```yaml
-request_summary: string
-business_goal: string
+project_goal: string
+input_artifact: string
+output_target: string
 constraints: [string]
-stakeholders: [string]
-known_risks: [string]
 ```
 
-## Output Specification
+## 输出
 
 ```yaml
-problem_statement: string
-functional_requirements: [string]
-non_functional_requirements: [string]
-scope:
-  in: [string]
-  out: [string]
-acceptance_criteria: [string]
-assumptions: [string]
-open_questions: [string]
+requirement_pack:
+  stages: [string]
+  node_types:
+    - node_id: string
+      node_type: simple|composite
+  acceptance_criteria: [string]
 ```
 
-## Execution Steps
+## 步骤
 
-1. Normalize user intent into one problem statement.
-2. Separate functional and non-functional requirements.
-3. Define in-scope and out-of-scope boundaries.
-4. Convert requirements into measurable acceptance criteria.
-5. Capture assumptions and unresolved questions.
-6. Hand off structured output to planner for task creation.
+1. 提炼业务目标。
+2. 拆解外层阶段。
+3. 按规则判定节点类型。
+4. 产出可验证验收标准。
 
+## Failure Case
+
+1. 需求冲突。
+2. 节点类型无法判定。
+3. 验收标准不可测。
+
+## Escalation
+
+1. 需求冲突 -> 升级 planner + architect。
+2. 类型不确定 -> 先按 composite 设计再裁剪。

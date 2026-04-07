@@ -1,53 +1,31 @@
-# Acceptance Specification
+﻿# acceptance.md (v0.12)
 
-Defines mandatory acceptance checks for tasks and releases.
+## 全局验收规则
 
-## Global Acceptance Rules
+1. 所有变更必须映射 `TASK-####`。
+2. 节点类型判定必须可追溯。
+3. composite 节点必须提交完整阶段协议与证据。
+4. subagent 边界必须合规。
+5. 双层质量控制必须通过。
+6. reviewer accept 才可 done。
 
-1. Every change maps to a valid `TASK-####` entry.
-2. Task includes explicit inputs, outputs, scope, and acceptance criteria.
-3. Task status transitions are valid and logged.
-4. Reviewer provides evidence-based `accept` decision before `done`.
-5. Constraints in `CLAUDE.md` are not violated.
+## 双层质量控制验收
 
-## Task-Level Acceptance Checklist
+### n8n 流程级
 
-For each task, reviewer must confirm:
+1. JSON 结构合法。
+2. 必填字段完整。
+3. 基础可执行路径有效。
 
-1. Scope compliance:
-   - Only authorized files or artifacts were changed.
-2. Requirement coverage:
-   - Each acceptance criterion is matched by evidence.
-3. Quality checks:
-   - Tests/checks defined by task pass.
-4. Documentation updates:
-   - Relevant docs/specs/memory updated when required.
-5. Risk handling:
-   - Known risks and follow-ups are documented.
+### 节点内容级
 
-## Review Decision Matrix
+1. 逻辑正确。
+2. 结构合理。
+3. 节奏一致。
+4. 阶段推进决策有证据。
 
-| Condition | Decision |
-|---|---|
-| All criteria passed with evidence | accept |
-| Any required criterion failed | reject |
-| Missing required evidence | reject |
-| Scope violation found | reject |
+## memory 验收
 
-## Release Readiness Checklist
-
-1. No `in_progress`, `blocked`, or `rejected` tasks in release scope.
-2. All release tasks are `done` with review evidence.
-3. Changelog includes release content summary.
-4. API and data model docs reflect shipped behavior.
-5. Critical regression checks are green.
-
-## Evidence Format
-
-Each acceptance item should provide:
-
-- Criterion text.
-- Evidence source (test output, artifact, or file diff summary).
-- Pass/fail decision.
-- Reviewer comment when failed.
-
+1. 长期写回符合三条件（多次验证、质量提升、reviewer间接确认）。
+2. subagent 无长期 memory 写入。
+3. Ephemeral 未违规升格。

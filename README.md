@@ -1,38 +1,155 @@
-﻿# agent-build
+﻿# agent-build v0.12
 
-一个面向 AI Agent / 自动化项目的通用模板仓库，强调“任务驱动、主控调度、子代理单责、可审计交付”。
+`agent-build` 是一个面向 **n8n 外层流程编排 + 节点级复合 agent 内部微流程** 的工程模板。
 
-## 项目目标
+本模板固化以下原则：
 
-`agent-build` 用于快速初始化任何 AI Agent 工程，兼容 Claude Code / Codex / OpenClaw 等工作方式。
+- n8n 管流程。
+- agent 管阶段。
+- subagent 内聚。
+- memory 分层。
+- task-first。
+- review-gated。
 
-本模板强制落实以下原则：
+## 1. 模板定位
 
-1. 任务驱动（Task-first）
-2. 单主控 agent（Main Loop）
-3. 子 agent 单一职责
-4. 所有规则文件化
-5. 所有行为经过 `TASKS.md`
-6. 强制 reviewer 验收
+本模板用于构建可审计、可扩展的 AI 生产流水线工程，尤其适用于：
 
-## 主控执行循环
+- 需要外层工作流编排与内层智能决策解耦的项目。
+- 需要节点内部多阶段处理和中间 JSON 校验的项目。
+- 需要 subagent 生命周期管理与 memory 分层治理的项目。
 
-用户需求 -> `main-agent` -> 生成或更新 `TASKS.md` -> 分派子任务 -> 子 agent 执行 -> `reviewer` 验收 -> 更新任务状态 -> 循环直到全部完成。
+## 2. 三层架构
+
+### 2.1 外层：n8n 编排层
+
+负责：
+
+1. 阶段顺序执行。
+2. 数据流转（统一 JSON）。
+3. 条件分支。
+4. 重试与中断。
+5. 日志与可观测性。
+6. 流程级校验（格式、字段）。
+
+不负责：
+
+1. 内容生成与推理。
+2. subagent 调度。
+3. memory 写入。
+4. 内容质量判断。
+
+### 2.2 中层：节点级复合 agent
+
+每个核心节点是阶段控制器，不是一次函数调用。它可以：
+
+1. 内部阶段拆分（stage pipeline）。
+2. subagent 创建与回收。
+3. memory 分层读取与写回控制。
+4. 中间 JSON 校验。
+5. 失败回退与重试。
+6. 结果汇总输出。
+
+### 2.3 内层：subagent 执行层
+
+特点：
+
+1. 短生命周期。
+2. 单一任务。
+3. 不参与流程调度。
+4. 不允许直接写长期 memory。
+5. 输出必须先返回节点 agent。
+
+## 3. simple vs composite 节点判断
+
+复合节点判定规则：满足以下任意两条即为 `composite`：
+
+1. 不是一次能稳定完成。
+2. 需要多阶段加工。
+3. 存在中间 JSON。
+4. 需要自检或 reviewer。
+5. 可拆分为子任务。
+
+否则可定义为 `simple`。
+
+### 文生视频标准阶段示例
+
+1. `script-agent`（通常 composite）
+2. `tts-agent`（通常 simple，可升级 composite）
+3. `storyboard-agent`（通常 composite）
+4. `asset-agent`（通常 composite）
+5. `editor-agent`（通常 simple，可升级 composite）
+6. `review-agent`（通常 composite）
+
+## 4. subagent 内部机制
+
+1. subagent 只由节点 agent 创建与回收。
+2. subagent 不允许串联调用。
+3. subagent 所有结果先回节点 agent。
+4. 下一步由节点 agent 决策。
+5. subagent 不可写 Global/Node Memory。
+
+## 5. memory 分层
+
+四层结构：
+
+1. `Global Memory`：全局规则与跨任务决策。
+2. `Node Memory`：节点能力与局部策略。
+3. `Task Context`：任务上下文与阶段索引。
+4. `Ephemeral Memory`：临时推理与中间产物。
+
+升格到长期 memory（Global/Node）必须同时满足：
+
+1. 多次验证。
+2. 确认提升质量。
+3. reviewer 间接确认。
+
+## 6. 双层质量控制
+
+### 6.1 n8n 流程级质量控制
+
+1. JSON 结构校验。
+2. 必填字段校验。
+3. 基础可执行性校验。
+
+### 6.2 节点 agent 内容质量控制
+
+1. 逻辑正确性。
+2. 结构合理性。
+3. 节奏与一致性。
+4. 是否允许进入下一阶段。
+
+## 7. n8n 集成方式
+
+1. n8n 每个大阶段调用一个节点 agent。
+2. 节点 agent 内部按统一阶段协议执行。
+3. 阶段协议见 `specs/node-stage-schema.yaml`。
+4. 节点结果统一 JSON 回传 n8n。
+
+## 8. 初始化方法
+
+1. 运行 `scripts/init-project.sh <project-name>`（Linux/macOS）。
+2. 或运行 `scripts/init-project.ps1 -ProjectName <project-name>`（Windows）。
+3. 更新 `docs/n8n-integration.md` 与 `TASKS.md`。
+4. 按 `workflows/composite-agent-flow.md` 落地复合节点。
+
+## 9. 使用流程
 
 ```mermaid
 flowchart LR
-    A["用户需求"] --> B["main-agent"]
-    B --> C["TASKS.md 建立/更新任务"]
-    C --> D["分配子任务"]
-    D --> E["子 agent 执行"]
-    E --> F["reviewer 验收"]
-    F --> G["更新任务状态"]
-    G --> H{"是否全部通过?"}
-    H -- 否 --> D
-    H -- 是 --> I["交付完成"]
+    A["输入需求"] --> B["main-agent 生成任务 TASKS.md"]
+    B --> C["n8n 外层阶段编排"]
+    C --> D["节点 agent 内部阶段执行"]
+    D --> E["可选 subagent 执行并回传"]
+    E --> F["节点 agent 校验/汇总输出"]
+    F --> G["n8n 流程级校验并流转"]
+    G --> H["reviewer 验收"]
+    H --> I{"通过?"}
+    I -- 否 --> D
+    I -- 是 --> J["任务 done + 受控 memory 升格"]
 ```
 
-## 目录说明
+## 10. 推荐目录用途
 
 ```text
 .
@@ -40,27 +157,26 @@ flowchart LR
 |- CLAUDE.md
 |- MEMORY.md
 |- TASKS.md
-|- prompts/      # 各角色 system prompt
-|- agents/       # 角色职责边界（能做/不能做）
-|- skills/       # 可复用执行技能
-|- docs/         # 产品/架构/决策/变更记录
-|- specs/        # API/数据模型/验收标准
-|- workflows/    # 任务、缺陷、发布流程
-`- workspace/    # 执行产物与临时文件
+|- agents/                     # 角色职责与权限边界
+|- prompts/                    # 角色系统提示词
+|- skills/                     # 可复用技能（含 failure/escalation）
+|- docs/
+|  |- architecture.md
+|  |- node-agent-pattern.md
+|  |- memory-layering.md
+|  |- n8n-integration.md
+|  `- composite-agent-flow.md
+|- specs/
+|  |- task-schema.yaml
+|  |- node-stage-schema.yaml
+|  `- memory-layer-schema.yaml
+|- workflows/
+|  |- task-lifecycle.md
+|  |- composite-agent-flow.md
+|  |- bugfix-flow.md
+|  `- release-flow.md
+|- scripts/
+|  |- init-project.sh
+|  `- init-project.ps1
+`- workspace/
 ```
-
-## 快速开始
-
-1. `git init`
-2. 阅读 `CLAUDE.md` 与 `TASKS.md`，确认约束和任务流转。
-3. 在 `docs/` 和 `specs/` 填充你的项目上下文。
-4. 在 `TASKS.md` 建立首批任务并进入主循环。
-5. 仅在 reviewer 验收通过后将任务标记为 `done`。
-
-## 执行约束
-
-1. 没有任务卡，不执行任何改动。
-2. 子 agent 不得越权改动未授权范围。
-3. 审核不通过必须回到 `in_progress` 或 `blocked`。
-4. 架构与关键决策必须记录到 `MEMORY.md` 与 `docs/decisions.md`。
-5. 发布前必须满足 `specs/acceptance.md`。

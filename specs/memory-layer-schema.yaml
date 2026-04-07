@@ -1,0 +1,42 @@
+﻿$schema: https://json-schema.org/draft/2020-12/schema
+title: Memory Layer Schema v0.12
+type: object
+required: [memory_layers]
+properties:
+  memory_layers:
+    type: array
+    minItems: 4
+    items:
+      type: object
+      required:
+        - layer_name
+        - readers
+        - writers
+        - lifecycle
+        - promotion_rules
+      properties:
+        layer_name:
+          type: string
+          enum: [global, node, task_context, ephemeral]
+        readers:
+          type: array
+          items:
+            type: string
+        writers:
+          type: array
+          items:
+            type: string
+        lifecycle:
+          type: string
+          enum: [long_term, task_term, short_term]
+        promotion_rules:
+          type: object
+          required: [multi_validation, quality_improvement, reviewer_indirect_confirmation]
+          properties:
+            multi_validation:
+              type: boolean
+            quality_improvement:
+              type: boolean
+            reviewer_indirect_confirmation:
+              type: boolean
+additionalProperties: false

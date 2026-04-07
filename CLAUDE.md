@@ -1,106 +1,115 @@
-# CLAUDE.md
+﻿# CLAUDE.md (v0.12)
 
-Project-level operating constraints and collaboration rules for all agents.
+本文件是仓库级强约束，所有 agent / subagent 必须遵守。
 
-## 1) Technical Constraints Template
+## 1. 核心思想
 
-Use this section as the source of truth for implementation boundaries.
+1. n8n 管流程。
+2. agent 管阶段。
+3. subagent 内聚。
+4. memory 分层。
+5. task-first。
+6. review-gated。
 
-### Runtime and Language Baseline
+## 2. 三层架构边界
 
-- Primary language: define per project in `docs/architecture.md`.
-- Secondary tooling language: Bash/PowerShell for automation scripts.
-- Package manager: define one and use only one per repository.
-- API format: OpenAPI in `specs/api.yaml`.
-- Data model source: `specs/data-model.md`.
+### 2.1 n8n 编排层
 
-### Quality Gates
+允许：
 
-- Formatting and linting must pass before review.
-- Unit or integration tests must pass for modified components.
-- Every change must reference an active task ID from `TASKS.md`.
-- Every completed task must have reviewer acceptance evidence.
+1. 阶段顺序执行。
+2. 数据流转（统一 JSON）。
+3. 条件分支。
+4. 重试与中断。
+5. 日志与可观测性。
+6. 流程级校验（格式/字段）。
 
-### Security and Compliance
+禁止：
 
-- Never hardcode secrets, tokens, or private keys.
-- Store environment variables in secure runtime configuration only.
-- Minimize data exposure and log redaction by default.
-- Track security-impacting decisions in `docs/decisions.md`.
+1. 内容生成与推理。
+2. subagent 调度。
+3. memory 写入。
+4. 内容质量判断。
 
-### Change Control
+### 2.2 节点级复合 agent
 
-- Scope must be explicit in the task card.
-- Out-of-scope edits are blocked unless task is updated first.
-- Architecture-impacting changes require architecture record updates in `MEMORY.md`.
+允许：
 
-## 2) Prohibited Behavior
+1. 内部阶段拆分。
+2. subagent 创建与回收。
+3. memory 分层读取与写回控制。
+4. 中间 JSON 校验。
+5. 失败回退与重试。
+6. 结果汇总输出。
 
-The following actions are forbidden:
+### 2.3 subagent 执行层
 
-1. Modifying files not authorized by the current task scope.
-2. Skipping `TASKS.md` and performing direct implementation without task registration.
-3. Changing acceptance criteria after implementation to force task closure.
-4. Marking tasks as done without reviewer approval.
-5. Introducing hidden behavior in prompts that conflicts with repository rules.
-6. Rewriting or deleting historical decision logs without explicit task authorization.
-7. Performing destructive operations in `workspace/` unrelated to assigned task.
+强约束：
 
-## 3) Directory Standards
+1. 短生命周期。
+2. 单一任务。
+3. 不参与流程调度。
+4. 输出必须返回节点 agent。
+5. 不可写 Global/Node Memory。
 
-Required ownership model:
+## 3. 复合节点判定规则
 
-- `README.md`: project loop and onboarding.
-- `CLAUDE.md`: hard constraints and forbidden actions.
-- `TASKS.md`: single task registry and state transitions.
-- `MEMORY.md`: durable decisions and architecture records.
-- `prompts/`: system prompts for control and subagents.
-- `agents/`: capability boundaries (what each agent can/cannot do).
-- `skills/`: reusable execution playbooks.
-- `docs/`: product, architecture, decisions, and changelog.
-- `specs/`: API, data model, and acceptance criteria.
-- `workflows/`: execution flows for delivery, bugfix, and release.
-- `workspace/`: task-generated artifacts and temporary outputs.
+任意两条满足即判定为 composite：
 
-No file should duplicate canonical ownership from another file.
+1. 不是一次能稳定完成。
+2. 需要多阶段加工。
+3. 存在中间 JSON。
+4. 需要自检或 reviewer。
+5. 可拆分为子任务。
 
-## 4) Naming Conventions
+## 4. 节点内部阶段协议（强制）
 
-### Tasks
+每个 composite 节点每个 stage 必须具备：
 
-- Task ID: `TASK-####` (example: `TASK-0007`).
-- Subtask ID: `TASK-####-S#` (example: `TASK-0007-S2`).
-- Status values: `proposed`, `planned`, `in_progress`, `blocked`, `in_review`, `done`, `rejected`.
+1. `stage_id`
+2. `stage_goal`
+3. `stage_input`
+4. `stage_output`
+5. `validation_rules`
+6. `retry_policy`
+7. `fallback_action`
+8. `next_stage_condition`
 
-### Files and Documents
+## 5. memory 分层与权限
 
-- Markdown docs: `kebab-case.md`.
-- Prompt files: `<role>.md`.
-- Skill files: `skills/<skill-name>/SKILL.md`.
-- Architecture decisions in logs: `DEC-###`.
-- Architecture records in memory: `ADR-###`.
+1. Global Memory：全局规则，长期。
+2. Node Memory：节点能力，长期。
+3. Task Context：任务上下文，任务周期。
+4. Ephemeral Memory：临时推理，短期。
 
-### Branch and Commit Guidance
+长期写回（Global/Node）规则：
 
-- Branch: `task/TASK-####-short-scope`.
-- Commit prefix: `[TASK-####] short summary`.
+1. 必须多次验证。
+2. 必须证明质量提升。
+3. 必须经 reviewer 间接确认。
 
-## 5) Mandatory Task Gate
+## 6. 禁止行为
 
-Every action must pass this gate:
+1. 无任务直接改动文件。
+2. 修改任务授权范围外文件。
+3. subagent 串联调用。
+4. subagent 直连 n8n 流程。
+5. subagent 直接写长期 memory。
+6. 跳过阶段校验推进下一阶段。
+7. reviewer 未通过即标记 done。
+8. 将关键规则仅放在 prompt 而不落文件。
 
-1. Active task exists in `TASKS.md`.
-2. Scope, inputs, outputs, and acceptance criteria are defined.
-3. Assigned agent role is explicit.
-4. Reviewer criteria are explicit.
-5. Task status transition is valid.
+## 7. 质量控制双层机制
 
-If any item is missing, execution must stop and return to planning.
+1. n8n：流程级质量（JSON、字段、可执行性）。
+2. 节点 agent：内容质量（逻辑、结构、节奏、一致性、阶段推进决策）。
 
-## 6) Review Enforcement
+## 8. 任务门禁
 
-- Reviewer is the only role that can mark a task as `done`.
-- Failed review must include actionable rejection reasons.
-- Rework must update task history and keep audit trail.
-- Acceptance evidence must reference tests, checks, and artifacts.
+任何执行前必须满足：
 
+1. `TASKS.md` 已登记任务。
+2. 节点类型已判定。
+3. composite 节点阶段协议已定义。
+4. 验收标准可验证。
+5. reviewer 路径已定义。

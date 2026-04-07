@@ -1,59 +1,95 @@
-# Architecture Overview
+﻿# architecture.md (v0.12)
 
-## Architecture Principles
+## 1. 架构总览
 
-1. Task-first orchestration over agent-first autonomy.
-2. Single control loop through main agent.
-3. Single-responsibility subagents.
-4. Explicit file-based policy and decision records.
-5. Reviewer-gated completion.
+`agent-build v0.12` 采用三层架构：
 
-## Core Components
+1. 外层：n8n 编排层。
+2. 中层：节点级复合 agent 控制层。
+3. 内层：subagent 执行层。
 
-1. `main-agent` controller:
-   - Owns loop control, task state transitions, and dispatch.
-2. Subagents:
-   - `planner`, `architect`, `coder`, `debugger`, `reviewer`.
-3. Task registry:
-   - `TASKS.md` as execution source of truth.
-4. Memory system:
-   - `MEMORY.md` and `docs/decisions.md`.
-5. Policy layer:
-   - `CLAUDE.md`, prompts, skills, workflows.
-6. Spec layer:
-   - `specs/api.yaml`, `specs/data-model.md`, `specs/acceptance.md`.
-7. Artifact workspace:
-   - `workspace/` for generated and transient artifacts.
+## 2. 外层 n8n 编排层
 
-## Control Flow
+职责：
 
-1. Intake user goal.
-2. Plan and register tasks.
-3. Dispatch one subtask to one role.
-4. Execute scoped work.
-5. Review against acceptance.
-6. Update task status and memory.
-7. Repeat until completion.
+1. 阶段顺序执行。
+2. 数据流转（统一 JSON）。
+3. 条件分支。
+4. 重试与中断。
+5. 日志与可观测性。
+6. 流程级校验（格式/字段）。
 
-## Data and State
+非职责：
 
-Primary states:
+1. 内容生成与推理。
+2. subagent 调度。
+3. memory 写入。
+4. 内容质量判断。
 
-- Task lifecycle in `TASKS.md`.
-- Decisions in `MEMORY.md` and `docs/decisions.md`.
-- Requirements/design/code evidence in docs, specs, and workspace artifacts.
+## 3. 中层节点级复合 agent
 
-## Failure Handling
+职责：
 
-1. If acceptance fails, task returns to `in_progress` or `blocked`.
-2. If constraints conflict, escalate to planner/architect and update task scope first.
-3. If architecture risk is high, require ADR entry before implementation.
+1. 内部阶段拆分。
+2. subagent 创建与回收。
+3. 分层 memory 读取与写回控制。
+4. 中间 JSON 校验。
+5. 失败回退与重试。
+6. 结果汇总输出。
 
-## Extension Model
+## 4. 内层 subagent 执行层
 
-1. Add subagent roles by adding:
-   - `prompts/<role>.md`
-   - `agents/<role>.md`
-2. Add reusable capabilities via new `skills/<name>/SKILL.md`.
-3. Add project-specific specifications under `specs/`.
+约束：
 
+1. 短生命周期。
+2. 单一任务。
+3. 不参与流程调度。
+4. 不可直接写长期 memory。
+5. 输出必须回节点 agent。
+
+## 5. 复合节点判定规则
+
+任意两条满足即 composite：
+
+1. 不是一次能稳定完成。
+2. 需要多阶段加工。
+3. 存在中间 JSON。
+4. 需要自检或 reviewer。
+5. 可拆分为子任务。
+
+## 6. 节点内部阶段协议
+
+每阶段必须定义：
+
+1. `stage_id`
+2. `stage_goal`
+3. `stage_input`
+4. `stage_output`
+5. `validation_rules`
+6. `retry_policy`
+7. `fallback_action`
+8. `next_stage_condition`
+
+## 7. 双层质量控制
+
+### n8n 流程级
+
+1. JSON 结构校验。
+2. 必填字段校验。
+3. 基础可执行性校验。
+
+### 节点内容级
+
+1. 逻辑正确性。
+2. 结构合理性。
+3. 节奏一致性。
+4. 阶段流转判断。
+
+## 8. 文生视频阶段参考
+
+1. script-agent（composite）
+2. tts-agent（simple，可升级）
+3. storyboard-agent（composite）
+4. asset-agent（composite）
+5. editor-agent（simple，可升级）
+6. review-agent（composite）

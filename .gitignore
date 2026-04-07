@@ -1,0 +1,28 @@
+﻿# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Runtime
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs and build
+*.log
+dist/
+build/
+coverage/
+
+# Workspace artifacts
+workspace/*
+!workspace/.gitkeep

@@ -1,80 +1,35 @@
-# Data Model Specification
+﻿# data-model.md (v0.12)
 
-## Overview
+## Task Model
 
-This model defines canonical entities for task-driven agent execution.
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| task_id | string | TASK-#### |
+| node_id | string | 节点标识 |
+| node_type | enum | simple/composite |
+| status | enum | 任务状态 |
+| internal_stage_plan | array | 复合节点阶段定义 |
+| dual_quality_gates | object | flow/content gate 结果 |
 
-## Entity: Task
+## Stage Model
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| id | string (`TASK-####`) | yes | Unique task identifier |
-| title | string | yes | Human-readable task name |
-| status | enum | yes | Task lifecycle state |
-| owner_agent | enum | yes | Current responsible role |
-| priority | enum (`P0..P3`) | yes | Delivery priority |
-| dependencies | array[string] | no | Required predecessor tasks |
-| input | object | yes | Inputs and constraints |
-| output | object | no | Delivery artifacts summary |
-| scope_in | array[string] | yes | Allowed work scope |
-| scope_out | array[string] | yes | Explicit exclusions |
-| acceptance_criteria | array[string] | yes | Reviewer validation basis |
-| execution_log | array[object] | no | Status history and notes |
-| review_result | object | no | Reviewer decision and evidence |
-| created_at | datetime | yes | Creation timestamp |
-| updated_at | datetime | yes | Last updated timestamp |
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| stage_id | string | 阶段 ID |
+| stage_goal | string | 阶段目标 |
+| stage_input | object | 阶段输入 |
+| stage_output | object | 阶段输出 |
+| validation_rules | array | 校验规则 |
+| retry_policy | object | 重试策略 |
+| fallback_action | string | 回退策略 |
+| next_stage_condition | string | 进入下一阶段条件 |
 
-### Task Status Enum
+## Memory Model
 
-- `proposed`
-- `planned`
-- `in_progress`
-- `blocked`
-- `in_review`
-- `done`
-- `rejected`
-
-## Entity: DecisionRecord
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| id | string (`DEC-###`) | yes | Decision ID |
-| date | date | yes | Decision date |
-| related_tasks | array[string] | yes | Related task IDs |
-| category | enum | yes | product, architecture, process, security |
-| decision | string | yes | Final decision |
-| rationale | string | yes | Why it was selected |
-| impact | string | yes | Expected impact |
-| status | enum | yes | active or superseded |
-
-## Entity: ArchitectureRecord
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| id | string (`ADR-###`) | yes | Architecture record ID |
-| date | date | yes | Record date |
-| related_tasks | array[string] | yes | Related task IDs |
-| problem | string | yes | Problem statement |
-| constraints | array[string] | yes | Boundaries and requirements |
-| decision | string | yes | Chosen architecture |
-| validation_plan | array[string] | yes | Verification checks |
-| rollback_plan | array[string] | yes | Recovery strategy |
-| status | enum | yes | proposed, accepted, deprecated |
-
-## Entity: ReviewResult
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| task_id | string | yes | Reviewed task ID |
-| reviewer | string | yes | Reviewer role or identity |
-| decision | enum | yes | accept or reject |
-| acceptance_matrix | array[object] | yes | Criterion-by-criterion decision |
-| comments | string | no | Additional notes |
-| reviewed_at | datetime | yes | Review timestamp |
-
-## Relationship Notes
-
-1. One `Task` can reference many `DecisionRecord` and `ArchitectureRecord` entries.
-2. One `Task` has zero or one final `ReviewResult` per review cycle.
-3. `done` status requires a corresponding `ReviewResult` with `decision=accept`.
-
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| layer_name | enum | global/node/task_context/ephemeral |
+| readers | array | 可读角色 |
+| writers | array | 可写角色 |
+| lifecycle | enum | long_term/task_term/short_term |
+| promotion_rules | object | 升格约束 |

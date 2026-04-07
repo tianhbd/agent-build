@@ -1,48 +1,38 @@
-# Skill: review
+﻿# Skill: review (v0.12)
 
-## Skill Name
-
-Acceptance Review Skill
-
-## When to Use
-
-Use this skill when:
-
-1. A task reaches `in_review`.
-2. Completion must be validated against explicit criteria.
-3. A release or merge decision depends on quality evidence.
-
-## Input Specification
+## 输入
 
 ```yaml
 task_id: TASK-####
+node_type: simple|composite
 acceptance_criteria: [string]
-delivery_evidence:
-  changed_files: [string]
-  test_results: [string]
-  checks: [string]
-constraints: [string]
+evidence: [object]
 ```
 
-## Output Specification
+## 输出
 
 ```yaml
-task_id: TASK-####
-decision: accept|reject
-criterion_results:
-  - criterion: string
-    evidence: string
-    pass: true|false
-violations: [string]
-required_rework: [string]
+review_result:
+  decision: accept|reject
+  flow_gate: pass|fail
+  content_gate: pass|fail
+  required_rework: [string]
 ```
 
-## Execution Steps
+## 步骤
 
-1. Validate task scope and criteria from `TASKS.md`.
-2. Verify evidence for each criterion one by one.
-3. Check compliance with `CLAUDE.md` constraints.
-4. Confirm no unauthorized file or scope drift occurred.
-5. Produce explicit accept/reject decision.
-6. If rejected, list mandatory rework items with evidence links.
+1. 对照验收标准核验。
+2. 检查双层质量控制证据。
+3. 检查 subagent 与 memory 边界。
+4. 输出 accept/reject。
 
+## Failure Case
+
+1. 证据缺失。
+2. 阶段协议不完整。
+3. memory 写回违规。
+
+## Escalation
+
+1. 重大违规 -> main-agent + architect。
+2. 连续 reject -> 建立专项整改任务。

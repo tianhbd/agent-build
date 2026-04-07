@@ -1,104 +1,80 @@
-# MEMORY.md
+﻿# MEMORY.md (v0.12)
 
-Persistent project memory for decisions, architecture records, and operational learning.
+本文件定义 memory 分层、读写权限、生命周期与升格规则。
 
-## Usage Rules
+## 1. 四层 memory
 
-1. Record only durable decisions and non-trivial findings.
-2. Every record must reference related task IDs.
-3. Update records when decisions are superseded.
-4. Do not remove historical records; mark status as superseded.
+| 层级 | 用途 | 可读 | 可写 | 生命周期 |
+|---|---|---|---|---|
+| Global Memory | 全局规则、跨任务决策 | 全部 agent | main-agent 提案 + reviewer 间接确认后落盘 | 长期 |
+| Node Memory | 节点能力、节点策略 | main-agent + 对应节点 agent | 节点 agent 提案 + reviewer 间接确认后落盘 | 长期 |
+| Task Context | 当前任务上下文、阶段索引 | 当前任务相关 agent | main-agent + 当前节点 agent | 任务周期 |
+| Ephemeral Memory | 临时推理、中间 JSON、草稿 | 当前节点 agent + 授权 subagent | 当前节点 agent | 短期 |
 
-## Decision Record Template
+## 2. 升格规则（Ephemeral/Task Context -> Node/Global）
+
+只有同时满足以下条件才可升格：
+
+1. 多次验证：至少在多个任务或多个阶段验证稳定。
+2. 提升质量：明确提高输出质量、稳定性或效率。
+3. reviewer 间接确认：通过任务验收证据确认可沉淀。
+
+## 3. 禁止升格内容
+
+1. 一次性临时草稿。
+2. 未通过校验的中间 JSON。
+3. 敏感片段或原始密钥。
+4. subagent 未经节点 agent 审核的输出。
+
+## 4. subagent 与 memory 规则
+
+1. subagent 可读取受限的 Ephemeral 子集。
+2. subagent 不可写 Global/Node Memory。
+3. subagent 输出必须先回节点 agent。
+4. 节点 agent 决定是否写入 Task Context。
+
+## 5. 决策模板
 
 ```markdown
 ### DEC-###
-- Date: YYYY-MM-DD
-- Related Task(s): TASK-####
-- Topic: <decision topic>
-- Context: <what triggered the decision>
-- Options Considered:
-  - Option A: <summary>
-  - Option B: <summary>
-- Decision: <chosen option and why>
-- Consequences:
-  - Positive: <impact>
-  - Tradeoff: <cost/risk>
+- Date:
+- Related Task(s):
+- Scope: global | node:<id>
+- Decision:
+- Evidence:
+- Quality Impact:
+- Reviewer Link:
 - Status: active | superseded
-- Supersedes: DEC-### | N/A
-- Superseded By: DEC-### | N/A
 ```
 
-## Architecture Record Template
+## 6. 当前基线记忆
 
-```markdown
-### ADR-###
-- Date: YYYY-MM-DD
-- Related Task(s): TASK-####
-- Title: <architecture change title>
-- Problem: <current architecture limitation>
-- Constraints:
-  - <constraint 1>
-  - <constraint 2>
-- Decision: <architecture decision>
-- Interfaces Affected:
-  - <component or API>
-- Data Impact:
-  - <schema/model changes>
-- Validation Plan:
-  - <tests/checks required>
-- Rollback Plan:
-  - <how to revert safely>
-- Status: proposed | accepted | deprecated
-```
-
-## Operational Memory Template
-
-```markdown
-### MEM-###
-- Date: YYYY-MM-DD
-- Related Task(s): TASK-####
-- Observation: <important behavior observed>
-- Evidence: <logs/tests/metrics link>
-- Action Taken: <what was changed>
-- Follow-up Needed: yes | no
-```
-
-## Current Records
-
-### DEC-001
+### DEC-120
 - Date: 2026-04-07
-- Related Task(s): TASK-0001
-- Topic: Task-first orchestration model
-- Context: Need a reusable agent project template with deterministic governance.
-- Options Considered:
-  - Option A: Agent-first delegation with implicit state.
-  - Option B: Task-first flow with explicit task ledger and reviewer gate.
-- Decision: Adopt option B to maximize traceability, control, and reproducibility.
-- Consequences:
-  - Positive: Clear audit trail and reduced hidden behavior.
-  - Tradeoff: Additional documentation overhead.
+- Related Task(s): TASK-0120
+- Scope: global
+- Decision: 固化三层架构（n8n 编排层 / 节点复合 agent 层 / subagent 执行层）。
+- Evidence: docs/architecture.md v0.12
+- Quality Impact: 流程与内容决策解耦，降低耦合风险。
+- Reviewer Link: TASK-0120 Review Result
 - Status: active
-- Supersedes: N/A
-- Superseded By: N/A
 
-### ADR-001
+### DEC-121
 - Date: 2026-04-07
-- Related Task(s): TASK-0001
-- Title: Single main-controller with specialized subagents
-- Problem: Uncoordinated multi-agent execution can cause scope drift.
-- Constraints:
-  - All work must be mediated by `TASKS.md`.
-  - Each subagent must keep a single responsibility.
-- Decision: Main agent controls planning, assignment, and status; subagents execute scoped tasks only.
-- Interfaces Affected:
-  - `prompts/main-agent.md`
-  - `agents/*.md`
-- Data Impact:
-  - Task schema requires owner role and acceptance block.
-- Validation Plan:
-  - Verify every completed task has a reviewer decision.
-- Rollback Plan:
-  - Revert to previous prompt and workflow files if orchestration is unstable.
-- Status: accepted
+- Related Task(s): TASK-0120
+- Scope: global
+- Decision: 固化双层质量控制机制（n8n 流程级 + 节点内容级）。
+- Evidence: docs/n8n-integration.md, docs/composite-agent-flow.md
+- Quality Impact: 提升执行稳定性与内容一致性。
+- Reviewer Link: TASK-0120 Review Result
+- Status: active
 
+### DEC-122
+- Date: 2026-04-07
+- Related Task(s): TASK-0120
+- Scope: global
+- Decision: 长期 memory 写回必须满足多次验证 + 质量提升 + reviewer 间接确认。
+- Evidence: docs/memory-layering.md, specs/memory-layer-schema.yaml
+- Quality Impact: 降低错误知识沉淀概率。
+- Reviewer Link: TASK-0120 Review Result
+- Status: active

@@ -1,48 +1,43 @@
-# Product Definition
+﻿# Product Definition (v0.11)
 
-## Product Vision
+## 产品定位
 
-Provide a reusable project template that enables fast, controlled setup of AI agent and automation systems.
+`agent-build` 是一个面向 **n8n 外层编排 + 节点复合 agent 内层自治** 的工程模板。
 
-## Target Users
+## 目标用户
 
-1. AI automation engineers.
-2. Agent framework teams.
-3. Technical product teams building task-driven copilots.
+1. 需要构建多阶段 AI 工作流的工程团队。
+2. 需要在 n8n 上编排主流程、在节点内做复杂决策的团队。
+3. 需要可审计任务治理与 memory 分层的项目维护者。
 
-## Problem Statement
+## 核心价值
 
-Many AI agent projects fail due to implicit rules, unclear ownership, and missing acceptance gates. This template provides explicit governance with reproducible execution.
+1. 让外层编排和内层智能解耦。
+2. 让复合节点可标准化实现与验收。
+3. 让 subagent 和 memory 行为可治理、可审计。
 
-## Product Goals
+## 重点支持场景
 
-1. Standardize task-first multi-agent delivery.
-2. Improve traceability across planning, implementation, and review.
-3. Reduce project startup time for new automation initiatives.
+- 基于 n8n 的文生视频项目：研究报告 -> 可发布视频。
 
-## Non-Goals
+参考阶段：
 
-1. Bundling a specific runtime stack implementation.
-2. Providing domain-specific business logic.
-3. Replacing team-specific security or compliance policies.
+1. script-agent
+2. tts-agent
+3. storyboard-agent
+4. asset-agent
+5. editor-agent
+6. review-agent
 
-## Success Metrics
+## 非目标
 
-1. Template adoption time under 30 minutes.
-2. 100% task-to-change traceability.
-3. 100% reviewer-gated completion for closed tasks.
-4. Reduced rework from scope drift.
+1. 强制绑定某一种运行时或语言。
+2. 强制绑定 HTTP 服务协议。
+3. 提供具体业务模型权重或供应商实现。
 
-## Scope Baseline
+## 成功标准
 
-Included:
-
-- Governance docs and role prompts.
-- Task ledger, memory templates, workflows.
-- API/data/acceptance specification scaffolds.
-
-Excluded:
-
-- Deployment pipeline implementation.
-- Runtime service code.
-
+1. 节点分型明确率 100%。
+2. composite 节点阶段协议覆盖率 100%。
+3. 任务闭环中 reviewer 验收覆盖率 100%。
+4. 长期 memory 写回合规率 100%。

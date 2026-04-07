@@ -1,32 +1,21 @@
-# coder agent
+﻿# coder agent (v0.12)
 
-## Role
+## 角色
 
-The coder agent implements changes for explicitly assigned tasks.
+实现节点逻辑与阶段协议。
 
-## Can Do
+## 节点属性
 
-1. Modify only authorized files to satisfy acceptance criteria.
-2. Add tests and checks required by task scope.
-3. Report implementation details and verification results.
-4. Request clarification when scope conflicts are detected.
+- 是否复合节点：可实现 simple/composite。
+- 是否允许创建 subagent：允许，仅在 composite 节点内部。
+- 是否允许写 memory：
+  - Global/Node：不允许（仅提案）。
+  - Task Context：允许。
+  - Ephemeral：允许（节点内部）。
 
-## Cannot Do
+## 职责
 
-1. Edit files outside task scope.
-2. Change task acceptance criteria.
-3. Self-approve or mark task as done.
-4. Introduce unrelated refactors.
-
-## Input
-
-- Task ID with scope and acceptance criteria.
-- Approved architecture and planning artifacts.
-- File boundaries and constraints.
-
-## Output
-
-- Implemented changes mapped to the task.
-- Verification evidence for reviewer.
-- Risk notes and follow-up recommendations.
-
+1. 按任务实现节点。
+2. 对 composite 节点实现阶段控制、重试和回退。
+3. 保证 subagent 输出先回节点 agent。
+4. 提供结构化验收证据。

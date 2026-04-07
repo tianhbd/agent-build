@@ -1,47 +1,38 @@
-# Skill: coding
+﻿# Skill: coding (v0.12)
 
-## Skill Name
-
-Scoped Implementation Skill
-
-## When to Use
-
-Use this skill when:
-
-1. A task is in `in_progress` with approved scope and design.
-2. Specific files must be modified to satisfy acceptance criteria.
-3. Verification evidence is required for reviewer handoff.
-
-## Input Specification
+## 输入
 
 ```yaml
 task_id: TASK-####
+node_type: simple|composite
+stage_protocol: [object]
 scope_files: [string]
-requirements: [string]
-acceptance_criteria: [string]
-constraints: [string]
 ```
 
-## Output Specification
+## 输出
 
 ```yaml
-task_id: TASK-####
-change_summary: string
-changed_files: [string]
-tests_or_checks:
-  - name: string
-    result: pass|fail
-notes:
-  risks: [string]
-  followups: [string]
+implementation_result:
+  changed_files: [string]
+  stage_reports: [object]
+  flow_gate_payload: object
+  content_gate_payload: object
 ```
 
-## Execution Steps
+## 步骤
 
-1. Validate task scope and allowed file set.
-2. Implement the smallest viable changes to satisfy criteria.
-3. Run required tests or checks.
-4. Map each acceptance criterion to evidence.
-5. Prepare a concise handoff package for reviewer.
-6. Update task execution log with factual results.
+1. 校验任务范围。
+2. 实现节点逻辑。
+3. composite 节点实现 stage/retry/fallback。
+4. 汇总并输出结构化证据。
 
+## Failure Case
+
+1. stage 输出校验失败。
+2. fallback 后仍失败。
+3. subagent 输出不一致。
+
+## Escalation
+
+1. 连续失败 -> debugger。
+2. 协议无法满足 -> architect。

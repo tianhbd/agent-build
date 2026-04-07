@@ -1,44 +1,17 @@
-# Task Lifecycle Workflow
+﻿# task-lifecycle.md (v0.12)
 
-## Purpose
-
-Define the end-to-end lifecycle for all tasks in a task-first agent project.
-
-## Lifecycle States
+## 生命周期
 
 `proposed -> planned -> in_progress -> in_review -> done`
 
-Fallback states:
+异常：
 
-- `blocked` from `planned` or `in_progress`
-- `rejected` from `in_review`
+- `in_progress -> blocked`
+- `in_review -> rejected -> in_progress`
 
-## Workflow Steps
+## 关键门禁
 
-1. Intake:
-   - Main agent receives user goal.
-   - Planner prepares task card draft.
-2. Registration:
-   - Task card is added to `TASKS.md` with status `proposed`.
-3. Planning approval:
-   - Main agent validates scope and acceptance, set status `planned`.
-4. Execution:
-   - Main agent dispatches one subagent.
-   - Task moves to `in_progress`.
-5. Delivery:
-   - Implementer provides outputs and evidence.
-   - Task moves to `in_review`.
-6. Review:
-   - Reviewer checks criteria and evidence.
-   - If pass: status `done`.
-   - If fail: status `rejected` with rework notes.
-7. Rework loop:
-   - Rejected tasks return to `in_progress` after fix plan.
-
-## Control Rules
-
-1. No direct transition to `done` without review.
-2. Any scope change requires task update before execution continues.
-3. Blocked tasks must include explicit blocker and owner.
-4. Every transition must append execution log entry.
-
+1. task-first：无任务不执行。
+2. composite 任务必须包含阶段协议。
+3. 双层质量控制证据齐全才能进入 in_review。
+4. reviewer accept 才能 done。
